@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import yt_dlp
 import requests
 
 app = FastAPI()
@@ -38,27 +37,16 @@ def search(q: str):
 
 @app.get("/stream")
 def stream(title: str, artist: str):
-    query = f"{title} {artist} audio"
-    ydl_opts = {
-        "quiet": True,
-        "skip_download": True,
-        "format": "bestaudio/best",
-        "noplaylist": True,
-        "extractor_args": {"youtube": {"skip": ["dash", "hls"]}},
-        "http_headers": {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
-        },
-    }
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(f"ytsearch1:{query}", download=False)
-            if not info or "entries" not in info or not info["entries"]:
-                raise HTTPException(status_code=404, detail="No audio found")
-            entry = info["entries"][0]
-            audio_url = entry.get("url")
-            return {"url": audio_url, "title": entry.get("title")}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    url = f"https://itunes.apple.com/search?term={title} {artist}&media=music&limit=1"
+    res = requests.get(url)
+    data = res.json()
+    results = data.get("results", [])
+    if not results:
+        raise HTTPException(status_code=404, detail="Song not found")
+    preview = results[0].get("previewUrl")
+    if not preview:
+        raise HTTPException(status_code=404, detail="No preview available")
+    return {"url": preview, "title": results[0].get("trackName")}
 
 
 @app.get("/lyrics")
