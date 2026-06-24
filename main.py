@@ -40,12 +40,15 @@ def search(q: str):
 def stream(title: str, artist: str):
     query = f"{title} {artist} audio"
     ydl_opts = {
-    "quiet": True,
-    "skip_download": True,
-    "format": "bestaudio/best",
-    "noplaylist": True,
-    "extractor_args": {"youtube": {"skip": ["dash", "hls"]}},
-}
+        "quiet": True,
+        "skip_download": True,
+        "format": "bestaudio/best",
+        "noplaylist": True,
+        "extractor_args": {"youtube": {"skip": ["dash", "hls"]}},
+        "http_headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
+        },
+    }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f"ytsearch1:{query}", download=False)
